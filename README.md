@@ -26,6 +26,3 @@ This Python script helps to identify and remove duplicate files within a specifi
 - Exercise caution while using this script, as it permanently deletes files. Make sure to double-check the directory path before executing the script.
 - Ensure you have appropriate permissions to delete files within the specified directory.
 - I don't take any responsibility for the script. Use as you want.
-
-## Creative Commons Attribution License (CC BY).
-This license allows others to distribute, remix, adapt, and build upon your work, even commercially, as long as they give appropriate credit to the original author(s).
