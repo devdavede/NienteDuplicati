@@ -1,44 +1,54 @@
-#!/usr/bin/python
-
-# Importing necessary modules
 import os
-import os.path
 import hashlib
-import sys  # Need to import sys for accessing command-line arguments
 
-# Function to walk through directory and its subdirectories
-def walk(dir):
-    hashes = []  # List to store hashes of files
-    for path in os.listdir(dir):  # Iterating through files and directories in given directory
-        
-        fullpath = os.path.join(dir, path)  # Full path of the current file or directory
+def file_checksum(file_path):
+    """Generate MD5 checksum for a file."""
+    with open(file_path, 'rb') as f:
+        checksum = hashlib.md5()
+        while chunk := f.read(8192):
+            checksum.update(chunk)
+    return checksum.hexdigest()
 
-        if os.path.isdir(fullpath):  # If the current item is a directory
-            if path[0:1] == ".":  # Skip hidden directories
-                continue
-            walk(fullpath)  # Recursively call walk function for subdirectory
-            continue
+def find_duplicate_files(root_dir):
+    """Find duplicate files within directories and subdirectories."""
+    file_hash_map = {}
+    duplicate_files = []
 
-        md5 = hash(fullpath)  # Calculate hash of the file
-        if md5 in hashes:  # If hash already exists in the list
-            print("Duplicate: " + fullpath)  # Print duplicate file path
-            os.remove(fullpath)  # Remove duplicate file
-        
-        hashes.append(md5)  # Add hash to the list
+    for dirpath, _, filenames in os.walk(root_dir):
+        file_hash_map.clear()  # Clear the map for each directory
+        for filename in filenames:
+            file_path = os.path.join(dirpath, filename)
+            if os.path.isfile(file_path):
+                file_hash = file_checksum(file_path)
+                if file_hash in file_hash_map:
+                    duplicate_files.append(file_path)
+                else:
+                    file_hash_map[file_hash] = file_path
 
-# Function to calculate hash of a file
-def hash(file):
-    BLOCK_SIZE = 65536  # The size of each read from the file
+    return duplicate_files
 
-    file_hash = hashlib.sha256()  # Create SHA-256 hash object
-    with open(file, 'rb') as f:  # Open the file to read its bytes in binary mode
-        fb = f.read(BLOCK_SIZE)  # Read a block of bytes from the file
-        while len(fb) > 0:  # Loop until no more bytes are read
-            file_hash.update(fb)  # Update the hash object with the bytes read
-            fb = f.read(BLOCK_SIZE)  # Read the next block of bytes
-    return file_hash.hexdigest()  # Return the hexadecimal digest of the hash
+def delete_duplicate_files(duplicate_files):
+    """Delete duplicate files."""
+    for file_path in duplicate_files:
+        os.remove(file_path)
+        print(f"Deleted: {file_path}")
+
+def main():
+    root_directory ="/Volumes/FotosSSD/Fotos"
+    duplicate_files = find_duplicate_files(root_directory)
+
+    if duplicate_files:
+        print("Duplicate files found:")
+        for file_path in duplicate_files:
+            print(file_path)
+        delete_confirmation = input("Do you want to delete the duplicates? (yes/no): ")
+        if delete_confirmation.lower() == "yes":
+            delete_duplicate_files(duplicate_files)
+            print("Duplicate files have been deleted.")
+        else:
+            print("Duplicate files were not deleted.")
+    else:
+        print("No duplicate files found.")
 
 if __name__ == "__main__":
-    path = sys.argv[0]  # Get the path of the script
-    print("Prüfe " + path)  # Print the path being checked
-    walk()  # Start walking through the directory structure
+    main()
